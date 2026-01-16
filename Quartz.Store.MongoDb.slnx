@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Examples/">
+    <Project Path="examples/Quartz.Store.MongoDb.Examples/Quartz.Store.MongoDb.Examples.csproj" Id="e3c39a1b-1e91-40b5-ab8f-78b7c93ec8f6" />
+  </Folder>
+  <Folder Name="/Src/">
+    <Project Path="src/Quartz.Store.MongoDb/Quartz.Store.MongoDb.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Quartz.Store.MongoDb.Tests/Quartz.Store.MongoDb.Tests.csproj" Id="1ceb4f05-2895-4b8d-82aa-573aa4cb058d" />
+  </Folder>
+</Solution>

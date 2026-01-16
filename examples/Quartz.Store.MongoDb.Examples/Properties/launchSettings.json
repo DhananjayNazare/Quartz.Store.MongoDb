@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "QuartzQuartz.Store.MongoDb.Examples": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

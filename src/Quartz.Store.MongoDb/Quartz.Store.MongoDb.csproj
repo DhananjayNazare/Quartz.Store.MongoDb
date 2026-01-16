@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0</TargetFrameworks>
+		<AssemblyName>Quartz.Store.MongoDb</AssemblyName>
+		<PackageVersion>1.0.0</PackageVersion>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<FileVersion>1.0.0</FileVersion>
+		<RepositoryType>Github</RepositoryType>
+		<PackageId>Quartz.Store.MongoDb</PackageId>
+		<Authors>Gabriel Lucaci, Dhananjay Nazare</Authors>
+		<RootNamespace>Quartz.Store.MongoDb</RootNamespace>
+		<Copyright>Copyright (c) 2021 Gabriel Lucaci</Copyright>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<IncludeSymbols>true</IncludeSymbols>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IsPackable>true</IsPackable>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>Quartz.NET Store JobStore MongoDB</PackageTags>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
+		<IsPublishable>True</IsPublishable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0|AnyCPU'">
+		<IsPublishable>True</IsPublishable>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\..\Quartz.Store.MongoDb\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MongoDB.Driver" Version="3.6.0" />
+		<PackageReference Include="Quartz" Version="3.15.1" />
+		<PackageReference Include="Common.Logging" Version="3.4.1" />
+		<PackageReference Include="Quartz.Serialization.Json" Version="3.15.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+	</ItemGroup>
+
+</Project>
