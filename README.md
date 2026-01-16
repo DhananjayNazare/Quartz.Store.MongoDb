@@ -3,9 +3,9 @@
 MongoDB-backed job store implementation for Quartz.NET. Persist your scheduled jobs, triggers and calendar data in MongoDB so multiple scheduler instances can share state and recover after restarts.
 
 <!-- Badges (replace placeholders) -->
-[![Build Status](https://img.shields.io/badge/build-PLACEHOLDER-blue)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/actions)
+[![Build Status](https://img.shields.io/badge/build-Release-blue)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/actions)
 [![NuGet](https://img.shields.io/badge/nuget-Quartz.Store.MongoDb-orange)](https://www.nuget.org/packages/Quartz.Store.MongoDb)
-[![License](https://img.shields.io/badge/license-LICENSE_NAME-green)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-License-green)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE)
 
 Overview
 --------
