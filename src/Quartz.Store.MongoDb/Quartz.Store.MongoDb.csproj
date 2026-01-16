@@ -4,9 +4,9 @@
 		<Description>MongoDB JobStore implementation for Quartz.NET</Description>
 		<TargetFrameworks>net9.0</TargetFrameworks>
 		<AssemblyName>Quartz.Store.MongoDb</AssemblyName>
-		<PackageVersion>0.0.1</PackageVersion>
+		<PackageVersion>0.0.2</PackageVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<FileVersion>0.0.1</FileVersion>
+		<FileVersion>0.0.2</FileVersion>
 		<RepositoryType>Github</RepositoryType>
 		<PackageId>Quartz.Store.MongoDb</PackageId>
 		<Authors>Gabriel Lucaci, Dhananjay Nazare</Authors>
