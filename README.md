@@ -24,19 +24,19 @@ Installation
 NuGet Package Manager:
 
 ```powershell
-Install-Package Quartz.Store.MongoDb
+Install-Package quartz-store-mongoDb
 ```
 
 dotnet CLI:
 
 ```bash
-dotnet add package Quartz.Store.MongoDb
+dotnet add package quartz-store-mongoDb
 ```
 
 Paket:
 
 ```bash
-paket add Quartz.Store.MongoDb
+paket add quartz-store-mongoDb
 ```
 
 Quick start (.NET 9)
@@ -123,7 +123,7 @@ Troubleshooting
 Links
 -----
 - Repository: REPOSITORY_URL
-- NuGet: https://www.nuget.org/packages/Quartz.Store.MongoDb
+- NuGet: https://www.nuget.org/packages/quartz-store-mongoDb
 - Documentation: REPOSITORY_URL/wiki or REPOSITORY_URL/docs
 - Changelog: REPOSITORY_URL/blob/main/CHANGELOG.md
 - Issues: REPOSITORY_URL/issues
