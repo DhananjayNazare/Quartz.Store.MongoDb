@@ -19,7 +19,7 @@
 		<IsPackable>true</IsPackable>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>Quartz.NET Store JobStore MongoDB</PackageTags>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RepositoryUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</RepositoryUrl>
@@ -36,6 +36,10 @@
 
 	<ItemGroup>
 	  <None Include="..\..\..\Quartz.Store.MongoDb\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\..\..\LICENSE">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
