@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>net9.0</TargetFrameworks>
 		<AssemblyName>Quartz.Store.MongoDb</AssemblyName>
-		<PackageVersion>1.0.0</PackageVersion>
+		<PackageVersion>0.0.1</PackageVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<FileVersion>1.0.0</FileVersion>
+		<FileVersion>0.0.1</FileVersion>
 		<RepositoryType>Github</RepositoryType>
 		<PackageId>Quartz.Store.MongoDb</PackageId>
 		<Authors>Gabriel Lucaci, Dhananjay Nazare</Authors>
