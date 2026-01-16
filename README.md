@@ -4,7 +4,7 @@ MongoDB-backed job store implementation for Quartz.NET. Persist your scheduled j
 
 <!-- Badges (replace placeholders) -->
 [![Build Status](https://img.shields.io/badge/build-Release-blue)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/actions)
-[![NuGet](https://img.shields.io/badge/nuget-Quartz.Store.MongoDb-orange)](https://www.nuget.org/packages/Quartz.Store.MongoDb)
+[![NuGet](https://img.shields.io/badge/nuget-Quartz.Store.MongoDb-orange)](https://www.nuget.org/packages/quartz-store-mongodb)
 [![License](https://img.shields.io/badge/license-License-green)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE)
 
 Overview
@@ -24,19 +24,19 @@ Installation
 NuGet Package Manager:
 
 ```powershell
-Install-Package quartz-store-mongoDb
+Install-Package quartz-store-mongodb
 ```
 
 dotnet CLI:
 
 ```bash
-dotnet add package quartz-store-mongoDb
+dotnet add package quartz-store-mongodb
 ```
 
 Paket:
 
 ```bash
-paket add quartz-store-mongoDb
+paket add quartz-store-mongodb
 ```
 
 Quick start (.NET 9)
@@ -123,7 +123,7 @@ Troubleshooting
 Links
 -----
 - Repository: REPOSITORY_URL
-- NuGet: https://www.nuget.org/packages/quartz-store-mongoDb
+- NuGet: https://www.nuget.org/packages/quartz-store-mongodb
 - Documentation: REPOSITORY_URL/wiki or REPOSITORY_URL/docs
 - Changelog: REPOSITORY_URL/blob/main/CHANGELOG.md
 - Issues: REPOSITORY_URL/issues
