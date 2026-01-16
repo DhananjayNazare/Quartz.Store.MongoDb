@@ -32,5 +32,5 @@ jobs:
         run: dotnet pack src/Quartz.Store.MongoDb/Quartz.Store.MongoDb.csproj --configuration Release --no-build --output ./nupkg
      
       - name: Push to NuGet.org
-        run:  dotnet nuget push "**/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run:  dotnet nuget push "**/nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
