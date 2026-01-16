@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<Description>MongoDB JobStore implementation for Quartz.NET</Description>
 		<TargetFrameworks>net9.0</TargetFrameworks>
 		<AssemblyName>Quartz.Store.MongoDb</AssemblyName>
 		<PackageVersion>0.0.1</PackageVersion>
@@ -18,7 +19,11 @@
 		<IsPackable>true</IsPackable>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>Quartz.NET Store JobStore MongoDB</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RepositoryUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</PackageProjectUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
