@@ -19,12 +19,11 @@
 		<IsPackable>true</IsPackable>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>Quartz.NET Store JobStore MongoDB</PackageTags>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RepositoryUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</PackageProjectUrl>
-		<PackageLicenseUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE</PackageLicenseUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
