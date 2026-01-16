@@ -24,6 +24,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RepositoryUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb</PackageProjectUrl>
+		<PackageLicenseUrl>https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE</PackageLicenseUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
