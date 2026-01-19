@@ -16,35 +16,35 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task<List<string>> GetPausedTriggerGroups()
+        public async Task<List<string>> GetPausedTriggerGroups(System.Threading.CancellationToken cancellationToken = default)
         {
             return await Collection.Find(group => group.Id.InstanceName == InstanceName)
                 .Project(group => group.Id.Group)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> IsTriggerGroupPaused(string group)
+        public async Task<bool> IsTriggerGroupPaused(string group, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(g => g.Id == new PausedTriggerGroupId(group, InstanceName)).AnyAsync().ConfigureAwait(false);
+            return await Collection.Find(g => g.Id == new PausedTriggerGroupId(group, InstanceName)).AnyAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task AddPausedTriggerGroup(string group)
+        public async Task AddPausedTriggerGroup(string group, System.Threading.CancellationToken cancellationToken = default)
         {
             await Collection.InsertOneAsync(new PausedTriggerGroup()
             {
                 Id = new PausedTriggerGroupId(group, InstanceName)
-            }).ConfigureAwait(false);
+            }, null, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeletePausedTriggerGroup(GroupMatcher<TriggerKey> matcher)
+        public async Task DeletePausedTriggerGroup(GroupMatcher<TriggerKey> matcher, System.Threading.CancellationToken cancellationToken = default)
         {
             var regex = matcher.ToBsonRegularExpression().ToRegex();
-            await Collection.DeleteManyAsync(group => group.Id.InstanceName == InstanceName && regex.IsMatch(group.Id.Group)).ConfigureAwait(false);
+            await Collection.DeleteManyAsync(group => group.Id.InstanceName == InstanceName && regex.IsMatch(group.Id.Group), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeletePausedTriggerGroup(string groupName)
+        public async Task DeletePausedTriggerGroup(string groupName, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.DeleteOneAsync(group => group.Id == new PausedTriggerGroupId(groupName, InstanceName)).ConfigureAwait(false);
+            await Collection.DeleteOneAsync(group => group.Id == new PausedTriggerGroupId(groupName, InstanceName), cancellationToken).ConfigureAwait(false);
         }
     }
 }

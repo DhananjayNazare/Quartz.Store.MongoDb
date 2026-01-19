@@ -13,24 +13,24 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task AddScheduler(Scheduler scheduler)
+        public async Task AddScheduler(Scheduler scheduler, System.Threading.CancellationToken cancellationToken = default)
         {
             await Collection.ReplaceOneAsync(sch => sch.Id == scheduler.Id,
-                scheduler, new UpdateOptions()
+                scheduler, new ReplaceOptions()
                 {
                     IsUpsert = true
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteScheduler(string id)
+        public async Task DeleteScheduler(string id, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.DeleteOneAsync(sch => sch.Id == new SchedulerId(id, InstanceName)).ConfigureAwait(false);
+            await Collection.DeleteOneAsync(sch => sch.Id == new SchedulerId(id, InstanceName), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task UpdateState(string id, SchedulerState state)
+        public async Task UpdateState(string id, SchedulerState state, System.Threading.CancellationToken cancellationToken = default)
         {
             await Collection.UpdateOneAsync(sch => sch.Id == new SchedulerId(id, InstanceName),
-                UpdateBuilder.Set(sch => sch.State, state)).ConfigureAwait(false);
+                UpdateBuilder.Set(sch => sch.State, state), null, cancellationToken).ConfigureAwait(false);
         }
     }
 }

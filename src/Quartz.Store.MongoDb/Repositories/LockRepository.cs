@@ -17,7 +17,7 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task<bool> TryAcquireLock(LockType lockType, string instanceId)
+        public async Task<bool> TryAcquireLock(LockType lockType, string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
             var lockId = new LockId(lockType, InstanceName);
             Log.Trace($"Trying to acquire lock {lockId} on {instanceId}");
@@ -27,7 +27,7 @@ namespace Quartz.Store.MongoDb.Repositories
                 {
                     Id = lockId,
                     InstanceId = instanceId,
-                    AquiredAt = DateTime.Now
+                    AquiredAt = SystemTime.UtcNow().UtcDateTime
                 }).ConfigureAwait(false);
                 Log.Trace($"Acquired lock {lockId} on {instanceId}");
                 return true;
@@ -39,13 +39,13 @@ namespace Quartz.Store.MongoDb.Repositories
             }
         }
 
-        public async Task<bool> ReleaseLock(LockType lockType, string instanceId)
+        public async Task<bool> ReleaseLock(LockType lockType, string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
             var lockId = new LockId(lockType, InstanceName);
             Log.Trace($"Releasing lock {lockId} on {instanceId}");
             var result =
                 await Collection.DeleteOneAsync(
-                    FilterBuilder.Where(@lock => @lock.Id == lockId && @lock.InstanceId == instanceId)).ConfigureAwait(false);
+                    FilterBuilder.Where(@lock => @lock.Id == lockId && @lock.InstanceId == instanceId), cancellationToken).ConfigureAwait(false);
             if (result.DeletedCount > 0)
             {
                 Log.Trace($"Released lock {lockId} on {instanceId}");

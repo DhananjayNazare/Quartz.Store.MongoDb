@@ -17,65 +17,65 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task<JobDetail> GetJob(JobKey jobKey)
+        public async Task<JobDetail> GetJob(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(detail => detail.Id == new JobDetailId(jobKey, InstanceName)).FirstOrDefaultAsync().ConfigureAwait(false);
+            return await Collection.Find(detail => detail.Id == new JobDetailId(jobKey, InstanceName)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<JobKey>> GetJobsKeys(GroupMatcher<JobKey> matcher)
+        public async Task<List<JobKey>> GetJobsKeys(GroupMatcher<JobKey> matcher, System.Threading.CancellationToken cancellationToken = default)
         {
             var list =
                 await Collection.Find(FilterBuilder.And(
                     FilterBuilder.Eq(detail => detail.Id.InstanceName, InstanceName),
                     FilterBuilder.Regex(detail => detail.Id.Group, matcher.ToBsonRegularExpression())))
                     .Project(detail => detail.Id)
-                    .ToListAsync().ConfigureAwait(false);
+                    .ToListAsync(cancellationToken).ConfigureAwait(false);
             return list.Select(id => id.GetJobKey()).ToList();
         }
 
-        public async Task<IEnumerable<string>> GetJobGroupNames()
+        public async Task<IEnumerable<string>> GetJobGroupNames(System.Threading.CancellationToken cancellationToken = default)
         {
             return await Collection
                 .Distinct(detail => detail.Id.Group, detail => detail.Id.InstanceName == InstanceName)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task AddJob(JobDetail jobDetail)
+        public async Task AddJob(JobDetail jobDetail, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(jobDetail).ConfigureAwait(false);
+            await Collection.InsertOneAsync(jobDetail, null, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> UpdateJob(JobDetail jobDetail, bool upsert)
+        public async Task<long> UpdateJob(JobDetail jobDetail, bool upsert, System.Threading.CancellationToken cancellationToken = default)
         {
             var result = await Collection.ReplaceOneAsync(detail => detail.Id == jobDetail.Id,
                 jobDetail,
                 new UpdateOptions
                 {
                     IsUpsert = upsert
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
-        public async Task UpdateJobData(JobKey jobKey, JobDataMap jobDataMap)
+        public async Task UpdateJobData(JobKey jobKey, JobDataMap jobDataMap, System.Threading.CancellationToken cancellationToken = default)
         {
             await Collection.UpdateOneAsync(detail => detail.Id == new JobDetailId(jobKey, InstanceName),
-                UpdateBuilder.Set(detail => detail.JobDataMap, jobDataMap)).ConfigureAwait(false);
+                UpdateBuilder.Set(detail => detail.JobDataMap, jobDataMap), null, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> DeleteJob(JobKey key)
+        public async Task<long> DeleteJob(JobKey key, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.DeleteOneAsync(FilterBuilder.Where(job => job.Id == new JobDetailId(key, InstanceName))).ConfigureAwait(false);
+            var result = await Collection.DeleteOneAsync(FilterBuilder.Where(job => job.Id == new JobDetailId(key, InstanceName)), cancellationToken).ConfigureAwait(false);
             return result.DeletedCount;
         }
 
-        public async Task<bool> JobExists(JobKey jobKey)
+        public async Task<bool> JobExists(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(detail => detail.Id == new JobDetailId(jobKey, InstanceName)).AnyAsync().ConfigureAwait(false);
+            return await Collection.Find(detail => detail.Id == new JobDetailId(jobKey, InstanceName)).AnyAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> GetCount()
+        public async Task<long> GetCount(System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(detail => detail.Id.InstanceName == InstanceName).CountAsync().ConfigureAwait(false);
+            return await Collection.Find(detail => detail.Id.InstanceName == InstanceName).CountAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

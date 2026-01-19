@@ -18,83 +18,83 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task<bool> TriggerExists(TriggerKey key)
+        public async Task<bool> TriggerExists(TriggerKey key, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(trigger => trigger.Id == new TriggerId(key, InstanceName)).AnyAsync().ConfigureAwait(false);
+            return await Collection.Find(trigger => trigger.Id == new TriggerId(key, InstanceName)).AnyAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> TriggersExists(string calendarName)
+        public async Task<bool> TriggersExists(string calendarName, System.Threading.CancellationToken cancellationToken = default)
         {
             return
                 await Collection.Find(
-                    trigger => trigger.Id.InstanceName == InstanceName && trigger.CalendarName == calendarName).AnyAsync().ConfigureAwait(false);
+                    trigger => trigger.Id.InstanceName == InstanceName && trigger.CalendarName == calendarName).AnyAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Trigger> GetTrigger(TriggerKey key)
+        public async Task<Trigger> GetTrigger(TriggerKey key, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(trigger => trigger.Id == new TriggerId(key, InstanceName)).FirstOrDefaultAsync().ConfigureAwait(false);
+            return await Collection.Find(trigger => trigger.Id == new TriggerId(key, InstanceName)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Models.TriggerState> GetTriggerState(TriggerKey triggerKey)
+        public async Task<Models.TriggerState> GetTriggerState(TriggerKey triggerKey, System.Threading.CancellationToken cancellationToken = default)
         {
             return await Collection.Find(trigger => trigger.Id == new TriggerId(triggerKey, InstanceName))
                 .Project(trigger => trigger.State)
-                .FirstOrDefaultAsync().ConfigureAwait(false);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<JobDataMap> GetTriggerJobDataMap(TriggerKey triggerKey)
+        public async Task<JobDataMap> GetTriggerJobDataMap(TriggerKey triggerKey, System.Threading.CancellationToken cancellationToken = default)
         {
             return await Collection.Find(trigger => trigger.Id == new TriggerId(triggerKey, InstanceName))
                 .Project(trigger => trigger.JobDataMap)
-                .FirstOrDefaultAsync().ConfigureAwait(false);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<Trigger>> GetTriggers(string calendarName)
+        public async Task<List<Trigger>> GetTriggers(string calendarName, System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(FilterBuilder.Where(trigger => trigger.CalendarName == calendarName)).ToListAsync().ConfigureAwait(false);
+            return await Collection.Find(FilterBuilder.Where(trigger => trigger.CalendarName == calendarName)).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<Trigger>> GetTriggers(JobKey jobKey)
+        public async Task<List<Trigger>> GetTriggers(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
             return
-                await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey).ToListAsync().ConfigureAwait(false);
+                await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<TriggerKey>> GetTriggerKeys(GroupMatcher<TriggerKey> matcher)
+        public async Task<List<TriggerKey>> GetTriggerKeys(GroupMatcher<TriggerKey> matcher, System.Threading.CancellationToken cancellationToken = default)
         {
             var list = await Collection.Find(FilterBuilder.And(
                 FilterBuilder.Eq(trigger => trigger.Id.InstanceName, InstanceName),
                 FilterBuilder.Regex(trigger => trigger.Id.Group, matcher.ToBsonRegularExpression())))
                 .Project(trigger => trigger.Id)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
             return list.Select(id => id.GetTriggerKey()).ToList();
         }
 
-        public async Task<List<TriggerKey>> GetTriggerKeys(Models.TriggerState state)
+        public async Task<List<TriggerKey>> GetTriggerKeys(Models.TriggerState state, System.Threading.CancellationToken cancellationToken = default)
         {
             var list = await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.State == state)
                 .Project(trigger => trigger.Id)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
             return list.Select(id => id.GetTriggerKey()).ToList();
         }
 
-        public async Task<List<string>> GetTriggerGroupNames()
+        public async Task<List<string>> GetTriggerGroupNames(System.Threading.CancellationToken cancellationToken = default)
         {
             return await Collection.Distinct(trigger => trigger.Id.Group,
                 trigger => trigger.Id.InstanceName == InstanceName)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<string>> GetTriggerGroupNames(GroupMatcher<TriggerKey> matcher)
+        public async Task<List<string>> GetTriggerGroupNames(GroupMatcher<TriggerKey> matcher, System.Threading.CancellationToken cancellationToken = default)
         {
             var regex = matcher.ToBsonRegularExpression().ToRegex();
             return await Collection.Distinct(trigger => trigger.Id.Group,
                     trigger => trigger.Id.InstanceName == InstanceName && regex.IsMatch(trigger.Id.Group))
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<List<TriggerKey>> GetTriggersToAcquire(DateTimeOffset noLaterThan, DateTimeOffset noEarlierThan,
-            int maxCount)
+            int maxCount, System.Threading.CancellationToken cancellationToken = default)
         {
             if (maxCount < 1)
             {
@@ -116,25 +116,26 @@ namespace Quartz.Store.MongoDb.Repositories
                     ))
                 .Limit(maxCount)
                 .Project(trigger => trigger.Id)
-                .ToListAsync().ConfigureAwait(false);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
             return list.Select(id => id.GetTriggerKey()).ToList();
 
         }
 
-        public async Task<long> GetCount()
+        public async Task<long> GetCount(System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName).CountAsync().ConfigureAwait(false);
+            return await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName).CountAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> GetCount(JobKey jobKey)
+        public async Task<long> GetCount(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
             return
                 await Collection.Find(
                     FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey))
-                    .CountAsync().ConfigureAwait(false);
+                    .CountAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> GetMisfireCount(DateTime nextFireTime)
+        [Obsolete]
+        public async Task<long> GetMisfireCount(DateTime nextFireTime, System.Threading.CancellationToken cancellationToken = default)
         {
             return
                 await Collection.Find(
@@ -142,85 +143,103 @@ namespace Quartz.Store.MongoDb.Repositories
                         trigger.Id.InstanceName == InstanceName &&
                         trigger.MisfireInstruction != MisfireInstruction.IgnoreMisfirePolicy &&
                         trigger.NextFireTime < nextFireTime && trigger.State == Models.TriggerState.Waiting)
-                    .CountAsync().ConfigureAwait(false);
+                    .CountAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task AddTrigger(Trigger trigger)
+        public async Task AddTrigger(Trigger trigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(trigger).ConfigureAwait(false);
+            await Collection.InsertOneAsync(trigger, null, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task UpdateTrigger(Trigger trigger)
+        public async Task UpdateTrigger(Trigger trigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.ReplaceOneAsync(t => t.Id == trigger.Id, trigger).ConfigureAwait(false);
+            await Collection.ReplaceOneAsync(t => t.Id == trigger.Id, trigger, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState state)
+        // Backward-compatible overloads without CancellationToken parameter
+        public Task<long> UpdateTriggersStates(GroupMatcher<TriggerKey> matcher, Models.TriggerState newState,
+            params Models.TriggerState[] oldStates)
+        {
+            return UpdateTriggersStates(matcher, newState, System.Threading.CancellationToken.None, oldStates);
+        }
+
+        public Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState,
+            params Models.TriggerState[] oldStates)
+        {
+            return UpdateTriggersStates(jobKey, newState, System.Threading.CancellationToken.None, oldStates);
+        }
+
+        public Task<long> UpdateTriggersStates(Models.TriggerState newState, params Models.TriggerState[] oldStates)
+        {
+            return UpdateTriggersStates(newState, System.Threading.CancellationToken.None, oldStates);
+        }
+
+        public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState state, System.Threading.CancellationToken cancellationToken = default)
         {
             var result = await Collection.UpdateOneAsync(trigger => trigger.Id == new TriggerId(triggerKey, InstanceName),
-                UpdateBuilder.Set(trigger => trigger.State, state)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, state), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
-        public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState newState, Models.TriggerState oldState)
+        public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState newState, Models.TriggerState oldState, System.Threading.CancellationToken cancellationToken = default)
         {
             var result = await Collection.UpdateOneAsync(
                 trigger => trigger.Id == new TriggerId(triggerKey, InstanceName) && trigger.State == oldState,
-                UpdateBuilder.Set(trigger => trigger.State, newState)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(GroupMatcher<TriggerKey> matcher, Models.TriggerState newState,
-            params Models.TriggerState[] oldStates)
+            System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
             var result = await Collection.UpdateManyAsync(FilterBuilder.And(
                 FilterBuilder.Eq(trigger => trigger.Id.InstanceName, InstanceName),
                 FilterBuilder.Regex(trigger => trigger.Id.Group, matcher.ToBsonRegularExpression()),
                 FilterBuilder.In(trigger => trigger.State, oldStates)),
-                UpdateBuilder.Set(trigger => trigger.State, newState)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState,
-            params Models.TriggerState[] oldStates)
+            System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
             var result = await Collection.UpdateManyAsync(
                 trigger =>
                     trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey &&
                     oldStates.Contains(trigger.State),
-                UpdateBuilder.Set(trigger => trigger.State, newState)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
-        public async Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState)
+        public async Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState, System.Threading.CancellationToken cancellationToken = default)
         {
             var result = await Collection.UpdateManyAsync(
                 trigger =>
                     trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey,
-                UpdateBuilder.Set(trigger => trigger.State, newState)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
-        public async Task<long> UpdateTriggersStates(Models.TriggerState newState, params Models.TriggerState[] oldStates)
+        public async Task<long> UpdateTriggersStates(Models.TriggerState newState, System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
             var result = await Collection.UpdateManyAsync(
                 trigger =>
                     trigger.Id.InstanceName == InstanceName && oldStates.Contains(trigger.State),
-                UpdateBuilder.Set(trigger => trigger.State, newState)).ConfigureAwait(false);
+                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
-        public async Task<long> DeleteTrigger(TriggerKey key)
+        public async Task<long> DeleteTrigger(TriggerKey key, System.Threading.CancellationToken cancellationToken = default)
         {
             var result =
-                await Collection.DeleteOneAsync(FilterBuilder.Where(trigger => trigger.Id == new TriggerId(key, InstanceName))).ConfigureAwait(false);
+                await Collection.DeleteOneAsync(FilterBuilder.Where(trigger => trigger.Id == new TriggerId(key, InstanceName)), cancellationToken).ConfigureAwait(false);
             return result.DeletedCount;
         }
 
-        public async Task<long> DeleteTriggers(JobKey jobKey)
+        public async Task<long> DeleteTriggers(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
             var result = await Collection.DeleteManyAsync(
-                FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey)).ConfigureAwait(false);
+                FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey), cancellationToken).ConfigureAwait(false);
             return result.DeletedCount;
         }
 

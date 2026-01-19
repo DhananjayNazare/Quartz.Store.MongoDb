@@ -83,6 +83,7 @@ namespace Quartz.Store.MongoDb.Examples
                 .WithIdentity("DataMapJob", "DataMapGroup")
                 .WithDescription("Job that uses JobDataMap for parameters")
                 .SetJobData(jobDataMap)
+                .PersistJobDataAfterExecution()
                 .Build();
 
             var trigger = TriggerBuilder

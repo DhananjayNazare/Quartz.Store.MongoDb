@@ -14,49 +14,55 @@ namespace Quartz.Store.MongoDb.Repositories
         {
         }
 
-        public async Task<List<FiredTrigger>> GetFiredTriggers(JobKey jobKey)
+        public async Task<List<FiredTrigger>> GetFiredTriggers(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
             return
-                await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey).ToListAsync().ConfigureAwait(false);
+                await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<FiredTrigger>> GetFiredTriggers(string instanceId)
+        public async Task<List<FiredTrigger>> GetFiredTriggers(string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
             return
                 await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId)
-                    .ToListAsync().ConfigureAwait(false);
+                    .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<FiredTrigger>> GetRecoverableFiredTriggers(string instanceId)
+        public async Task<List<FiredTrigger>> GetRecoverableFiredTriggers(string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
             return
                 await Collection.Find(
                     trigger =>
                         trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId &&
-                        trigger.RequestsRecovery).ToListAsync().ConfigureAwait(false);
+                        trigger.RequestsRecovery).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task AddFiredTrigger(FiredTrigger firedTrigger)
+        public async Task AddFiredTrigger(FiredTrigger firedTrigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(firedTrigger).ConfigureAwait(false);
+            await Collection.InsertOneAsync(firedTrigger, null, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task DeleteFiredTrigger(string firedInstanceId)
+        public async Task DeleteFiredTrigger(string firedInstanceId, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.DeleteOneAsync(trigger => trigger.Id == new FiredTriggerId(firedInstanceId, InstanceName)).ConfigureAwait(false);
+            await Collection.DeleteOneAsync(trigger => trigger.Id == new FiredTriggerId(firedInstanceId, InstanceName), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<long> DeleteFiredTriggersByInstanceId(string instanceId)
+        public async Task<long> DeleteFiredTriggersByInstanceId(string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
             var result =
                 await Collection.DeleteManyAsync(
-                    trigger => trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId).ConfigureAwait(false);
+                    trigger => trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId, cancellationToken).ConfigureAwait(false);
             return result.DeletedCount;
         }
 
-        public async Task UpdateFiredTrigger(FiredTrigger firedTrigger)
+        public async Task UpdateFiredTrigger(FiredTrigger firedTrigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.ReplaceOneAsync(trigger => trigger.Id == firedTrigger.Id, firedTrigger).ConfigureAwait(false);
+            await Collection.ReplaceOneAsync(trigger => trigger.Id == firedTrigger.Id, firedTrigger, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+
+        // Backward-compatible overload
+        public Task UpdateFiredTrigger(FiredTrigger firedTrigger)
+        {
+            return UpdateFiredTrigger(firedTrigger, System.Threading.CancellationToken.None);
         }
     }
 }

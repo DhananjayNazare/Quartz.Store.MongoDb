@@ -44,9 +44,9 @@ namespace Quartz.Store.MongoDb.Repositories
             return Task.FromResult(0);
         }
 
-        public async Task DeleteAll()
+        public async Task DeleteAll(System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.DeleteManyAsync(FilterBuilder.Empty).ConfigureAwait(false);
+            await Collection.DeleteManyAsync(FilterBuilder.Empty, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
