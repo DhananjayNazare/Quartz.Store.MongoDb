@@ -148,12 +148,12 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task AddTrigger(Trigger trigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(trigger, null, cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.InsertOneAsync(trigger, null, cancellationToken)).ConfigureAwait(false);
         }
 
         public async Task UpdateTrigger(Trigger trigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.ReplaceOneAsync(t => t.Id == trigger.Id, trigger, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.ReplaceOneAsync(t => t.Id == trigger.Id, trigger, cancellationToken: cancellationToken)).ConfigureAwait(false);
         }
 
         // Backward-compatible overloads without CancellationToken parameter
@@ -176,70 +176,77 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState state, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.UpdateOneAsync(trigger => trigger.Id == new TriggerId(triggerKey, InstanceName),
-                UpdateBuilder.Set(trigger => trigger.State, state), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateOneAsync(trigger => trigger.Id == new TriggerId(triggerKey, InstanceName),
+                    UpdateBuilder.Set(trigger => trigger.State, state), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggerState(TriggerKey triggerKey, Models.TriggerState newState, Models.TriggerState oldState, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.UpdateOneAsync(
-                trigger => trigger.Id == new TriggerId(triggerKey, InstanceName) && trigger.State == oldState,
-                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateOneAsync(
+                    trigger => trigger.Id == new TriggerId(triggerKey, InstanceName) && trigger.State == oldState,
+                    UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(GroupMatcher<TriggerKey> matcher, Models.TriggerState newState,
             System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
-            var result = await Collection.UpdateManyAsync(FilterBuilder.And(
-                FilterBuilder.Eq(trigger => trigger.Id.InstanceName, InstanceName),
-                FilterBuilder.Regex(trigger => trigger.Id.Group, matcher.ToBsonRegularExpression()),
-                FilterBuilder.In(trigger => trigger.State, oldStates)),
-                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateManyAsync(FilterBuilder.And(
+                    FilterBuilder.Eq(trigger => trigger.Id.InstanceName, InstanceName),
+                    FilterBuilder.Regex(trigger => trigger.Id.Group, matcher.ToBsonRegularExpression()),
+                    FilterBuilder.In(trigger => trigger.State, oldStates)),
+                    UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState,
             System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
-            var result = await Collection.UpdateManyAsync(
-                trigger =>
-                    trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey &&
-                    oldStates.Contains(trigger.State),
-                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateManyAsync(
+                    trigger =>
+                        trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey &&
+                        oldStates.Contains(trigger.State),
+                    UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(JobKey jobKey, Models.TriggerState newState, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.UpdateManyAsync(
-                trigger =>
-                    trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey,
-                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateManyAsync(
+                    trigger =>
+                        trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey,
+                    UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> UpdateTriggersStates(Models.TriggerState newState, System.Threading.CancellationToken cancellationToken = default, params Models.TriggerState[] oldStates)
         {
-            var result = await Collection.UpdateManyAsync(
-                trigger =>
-                    trigger.Id.InstanceName == InstanceName && oldStates.Contains(trigger.State),
-                UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.UpdateManyAsync(
+                    trigger =>
+                        trigger.Id.InstanceName == InstanceName && oldStates.Contains(trigger.State),
+                    UpdateBuilder.Set(trigger => trigger.State, newState), null, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task<long> DeleteTrigger(TriggerKey key, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result =
-                await Collection.DeleteOneAsync(FilterBuilder.Where(trigger => trigger.Id == new TriggerId(key, InstanceName)), cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.DeleteOneAsync(FilterBuilder.Where(trigger => trigger.Id == new TriggerId(key, InstanceName)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.DeletedCount;
         }
 
         public async Task<long> DeleteTriggers(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.DeleteManyAsync(
-                FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey), cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.DeleteManyAsync(
+                    FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.DeletedCount;
         }
 

@@ -42,19 +42,20 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task AddCalendar(Calendar calendar)
         {
-            await Collection.InsertOneAsync(calendar).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.InsertOneAsync(calendar)).ConfigureAwait(false);
         }
 
         public async Task<long> UpdateCalendar(Calendar calendar)
         {
-            var result = await Collection.ReplaceOneAsync(cal => cal.Id == calendar.Id, calendar).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.ReplaceOneAsync(cal => cal.Id == calendar.Id, calendar).ConfigureAwait(false)).ConfigureAwait(false);
             return result.MatchedCount;
         }
 
         public async Task<long> DeleteCalendar(string calendarName)
         {
-            var result =
-                await Collection.DeleteOneAsync(calendar => calendar.Id == new CalendarId(calendarName, InstanceName)).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.DeleteOneAsync(calendar => calendar.Id == new CalendarId(calendarName, InstanceName)).ConfigureAwait(false)).ConfigureAwait(false);
             return result.DeletedCount;
         }
     }

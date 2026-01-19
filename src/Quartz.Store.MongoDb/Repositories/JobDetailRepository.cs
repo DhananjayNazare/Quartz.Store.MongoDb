@@ -42,29 +42,31 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task AddJob(JobDetail jobDetail, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(jobDetail, null, cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.InsertOneAsync(jobDetail, null, cancellationToken)).ConfigureAwait(false);
         }
 
         public async Task<long> UpdateJob(JobDetail jobDetail, bool upsert, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.ReplaceOneAsync(detail => detail.Id == jobDetail.Id,
-                jobDetail,
-                new UpdateOptions
-                {
-                    IsUpsert = upsert
-                }, cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.ReplaceOneAsync(detail => detail.Id == jobDetail.Id,
+                    jobDetail,
+                    new ReplaceOptions
+                    {
+                        IsUpsert = upsert
+                    }, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.ModifiedCount;
         }
 
         public async Task UpdateJobData(JobKey jobKey, JobDataMap jobDataMap, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.UpdateOneAsync(detail => detail.Id == new JobDetailId(jobKey, InstanceName),
-                UpdateBuilder.Set(detail => detail.JobDataMap, jobDataMap), null, cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.UpdateOneAsync(detail => detail.Id == new JobDetailId(jobKey, InstanceName),
+                UpdateBuilder.Set(detail => detail.JobDataMap, jobDataMap), null, cancellationToken)).ConfigureAwait(false);
         }
 
         public async Task<long> DeleteJob(JobKey key, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result = await Collection.DeleteOneAsync(FilterBuilder.Where(job => job.Id == new JobDetailId(key, InstanceName)), cancellationToken).ConfigureAwait(false);
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
+                await Collection.DeleteOneAsync(FilterBuilder.Where(job => job.Id == new JobDetailId(key, InstanceName)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.DeletedCount;
         }
 

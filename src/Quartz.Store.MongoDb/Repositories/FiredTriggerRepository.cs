@@ -38,25 +38,25 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task AddFiredTrigger(FiredTrigger firedTrigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.InsertOneAsync(firedTrigger, null, cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.InsertOneAsync(firedTrigger, null, cancellationToken)).ConfigureAwait(false);
         }
 
         public async Task DeleteFiredTrigger(string firedInstanceId, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.DeleteOneAsync(trigger => trigger.Id == new FiredTriggerId(firedInstanceId, InstanceName), cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.DeleteOneAsync(trigger => trigger.Id == new FiredTriggerId(firedInstanceId, InstanceName), cancellationToken)).ConfigureAwait(false);
         }
 
         public async Task<long> DeleteFiredTriggersByInstanceId(string instanceId, System.Threading.CancellationToken cancellationToken = default)
         {
-            var result =
+            var result = await DbRetryHelper.RunWithRetriesAsync(async () =>
                 await Collection.DeleteManyAsync(
-                    trigger => trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId, cancellationToken).ConfigureAwait(false);
+                    trigger => trigger.Id.InstanceName == InstanceName && trigger.InstanceId == instanceId, cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
             return result.DeletedCount;
         }
 
         public async Task UpdateFiredTrigger(FiredTrigger firedTrigger, System.Threading.CancellationToken cancellationToken = default)
         {
-            await Collection.ReplaceOneAsync(trigger => trigger.Id == firedTrigger.Id, firedTrigger, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await DbRetryHelper.RunWithRetriesAsync(() => Collection.ReplaceOneAsync(trigger => trigger.Id == firedTrigger.Id, firedTrigger, cancellationToken: cancellationToken)).ConfigureAwait(false);
         }
 
         // Backward-compatible overload
