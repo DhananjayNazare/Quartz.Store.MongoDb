@@ -3,24 +3,25 @@
 MongoDB-backed job store implementation for Quartz.NET. Persist your scheduled jobs, triggers and calendar data in MongoDB so multiple scheduler instances can share state and recover after restarts.
 
 <!-- Badges (replace placeholders) -->
+
 [![Build Status](https://img.shields.io/badge/build-Release-blue)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/actions)
 [![NuGet](https://img.shields.io/badge/nuget-Quartz.Store.MongoDb-orange)](https://www.nuget.org/packages/quartz-store-mongodb)
 [![License](https://img.shields.io/badge/license-License-green)](https://github.com/DhananjayNazare/Quartz.Store.MongoDb/blob/main/LICENSE)
 
-Overview
---------
+## Overview
+
 `Quartz.Store.MongoDb` implements a persistent `IJobStore` for Quartz.NET backed by MongoDB. Use it to:
 
 - Persist job and trigger metadata across restarts
 - Share scheduler state between instances (clustering)
 - Improve reliability for scheduled workloads
 
-Supported frameworks
---------------------
+## Supported frameworks
+
 - .NET 9
 
-Installation
-------------
+## Installation
+
 NuGet Package Manager:
 
 ```powershell
@@ -39,8 +40,8 @@ Paket:
 paket add quartz-store-mongodb
 ```
 
-Quick start (.NET 9)
----------------------
+## Quick start (.NET 9)
+
 This example shows how to configure Quartz to use the MongoDB job store with generic host. It reads connection configuration from the `appsettings.json` or an environment variable.
 
 ```csharp
@@ -75,8 +76,8 @@ await Host.CreateDefaultBuilder()
 
 If you prefer environment variables, set `MONGODB_CONNECTION` and read it in place of the configuration section.
 
-Legacy example (NameValueCollection)
------------------------------------
+## Legacy example (NameValueCollection)
+
 If your app uses the `StdSchedulerFactory` configuration approach (older frameworks), you can configure the store via `NameValueCollection`:
 
 ```csharp
@@ -90,16 +91,16 @@ properties[$"{StdSchedulerFactory.PropertyJobStorePrefix}.collectionPrefix"] = "
 var scheduler = new StdSchedulerFactory(properties).GetScheduler().Result;
 ```
 
-Configuration options
----------------------
+## Configuration options
+
 Common properties (the job store prefix is `quartz.jobStore`):
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `quartz.jobStore.connectionString` | string | - | MongoDB connection string (e.g. `mongodb://user:pass@host:27017/database`) |
-| `quartz.jobStore.collectionPrefix` | string | `quartz` | Prefix for collections used to store jobs/triggers |
-| `quartz.jobStore.useTls` | bool | `false` | Enable TLS/SSL when required by MongoDB |
-| `quartz.scheduler.instanceId` | string | auto | Scheduler instance id (use stable value for clustering) |
+| Key                                | Type   | Default  | Description                                                                |
+| ---------------------------------- | ------ | -------- | -------------------------------------------------------------------------- |
+| `quartz.jobStore.connectionString` | string | -        | MongoDB connection string (e.g. `mongodb://user:pass@host:27017/database`) |
+| `quartz.jobStore.collectionPrefix` | string | `quartz` | Prefix for collections used to store jobs/triggers                         |
+| `quartz.jobStore.useTls`           | bool   | `false`  | Enable TLS/SSL when required by MongoDB                                    |
+| `quartz.scheduler.instanceId`      | string | auto     | Scheduler instance id (use stable value for clustering)                    |
 
 Store your connection string in environment variables or a secrets manager for production. Example `appsettings.json`:
 
@@ -113,23 +114,17 @@ Store your connection string in environment variables or a secrets manager for p
 }
 ```
 
-Troubleshooting
----------------
+## Troubleshooting
+
 - Cannot connect to MongoDB: verify the connection string, network, and authentication. Try `mongo` shell or a MongoDB client.
 - Scheduler state not shared: ensure all instances use the same `connectionString` and `collectionPrefix` and are pointed at the same database.
 - Duplicate key errors: caused by collection prefix changes or schema drift; ensure consistent `collectionPrefix` and consider migration scripts.
 
+## Links
 
-Links
------
-- Repository: REPOSITORY_URL
+- Repository: https://github.com/DhananjayNazare/Quartz.Store.MongoDb
 - NuGet: https://www.nuget.org/packages/quartz-store-mongodb
-- Documentation: REPOSITORY_URL/wiki or REPOSITORY_URL/docs
-- Changelog: REPOSITORY_URL/blob/main/CHANGELOG.md
-- Issues: REPOSITORY_URL/issues
 
+## License
 
-License
--------
 `Quartz.Store.MongoDb` is released under `MIT`. See `LICENSE` for details.
-

@@ -11,6 +11,7 @@ await Host.CreateDefaultBuilder()
     .ConfigureServices ((cxt, services) =>
     {
         services.AddHostedService<JobsScheduler>();
+        services.AddHostedService<AdvancedJobsScheduler>();
 
         services.AddQuartz(q => {
 
