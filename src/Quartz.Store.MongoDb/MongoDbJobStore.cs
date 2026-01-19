@@ -146,7 +146,7 @@ namespace Quartz.Store.MongoDb
             {
                 Id = _schedulerId,
                 State = SchedulerState.Started,
-                LastCheckIn = DateTime.Now
+                LastCheckIn = DateTime.UtcNow
             }).ConfigureAwait(false);
 
             try
@@ -294,7 +294,17 @@ namespace Quartz.Store.MongoDb
             {
                 using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
                 {
-                    return jobKeys.Aggregate(true, (current, jobKey) => current && RemoveJobInternal(jobKey).Result);
+                    foreach (var jobKey in jobKeys)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var removed = await RemoveJobInternal(jobKey).ConfigureAwait(false);
+                        if (!removed)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -728,7 +738,7 @@ namespace Quartz.Store.MongoDb
             {
                 using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
                 {
-                    return await AcquireNextTriggersInternal(noLaterThan, maxCount, timeWindow).ConfigureAwait(false);
+                    return await AcquireNextTriggersInternal(noLaterThan, maxCount, timeWindow, token).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -1240,7 +1250,7 @@ namespace Quartz.Store.MongoDb
             bool forceState)
         {
             var trigger = await _triggerRepository.GetTrigger(triggerKey).ConfigureAwait(false);
-            var misfireTime = DateTime.Now;
+            var misfireTime = SystemTime.UtcNow().UtcDateTime;
             if (MisfireThreshold > TimeSpan.Zero)
             {
                 misfireTime = misfireTime.AddMilliseconds(-1 * MisfireThreshold.TotalMilliseconds);
@@ -1284,7 +1294,7 @@ namespace Quartz.Store.MongoDb
 
         private async Task<IReadOnlyCollection<IOperableTrigger>> AcquireNextTriggersInternal(
             DateTimeOffset noLaterThan, int maxCount,
-            TimeSpan timeWindow)
+            TimeSpan timeWindow, CancellationToken token = default)
         {
             if (timeWindow < TimeSpan.Zero)
             {
@@ -1300,6 +1310,7 @@ namespace Quartz.Store.MongoDb
             do
             {
                 currentLoopCount++;
+                token.ThrowIfCancellationRequested();
                 var keys = await _triggerRepository
                     .GetTriggersToAcquire(noLaterThan + timeWindow, MisfireTime, maxCount).ConfigureAwait(false);
 
@@ -1320,6 +1331,7 @@ namespace Quartz.Store.MongoDb
                     JobDetail jobDetail;
                     try
                     {
+                        token.ThrowIfCancellationRequested();
                         jobDetail = await _jobDetailRepository.GetJob(jobKey).ConfigureAwait(false);
                     }
                     catch (Exception)
