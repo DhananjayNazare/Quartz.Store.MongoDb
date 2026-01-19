@@ -76,9 +76,7 @@ namespace Quartz.Store.MongoDb
             await _pendingLocksSemaphore.WaitAsync();
             try
             {
-
-                _lockRepository.ReleaseLock(lockInstance.LockType, lockInstance.InstanceId).ConfigureAwait(false).GetAwaiter().GetResult();
-                
+                await _lockRepository.ReleaseLock(lockInstance.LockType, lockInstance.InstanceId, CancellationToken.None).ConfigureAwait(false);
                 LockReleased(lockInstance);
             }
             finally
@@ -128,7 +126,7 @@ namespace Quartz.Store.MongoDb
 
             public LockType LockType { get; }
 
-            public void Dispose()
+            public async ValueTask DisposeAsync()
             {
                 if (_disposed)
                 {
@@ -136,9 +134,24 @@ namespace Quartz.Store.MongoDb
                         $"This lock {LockType} for {InstanceId} has already been disposed");
                 }
 
-                _lockManager.ReleaseLock(this).GetAwaiter().GetResult();
+                await _lockManager.ReleaseLock(this).ConfigureAwait(false);
+                _disposed = true;
+            }
+
+            public void Dispose()
+            {
+                // For synchronous Dispose (e.g., in finally blocks), we need to signal without blocking
+                // The lock will be released asynchronously; this just marks it for cleanup
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(nameof(LockInstance),
+                        $"This lock {LockType} for {InstanceId} has already been disposed");
+                }
 
                 _disposed = true;
+                // Fire and forget the async release to avoid blocking
+                // The lock will eventually be released or expire via TTL
+                _ = _lockManager.ReleaseLock(this);
             }
         }
     }

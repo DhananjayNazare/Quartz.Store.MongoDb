@@ -6,8 +6,6 @@ namespace Quartz.Store.MongoDb.Repositories
 {
     internal static class DbRetryHelper
     {
-        private static readonly Random Jitterer = new Random();
-
         public static async Task<T> RunWithRetriesAsync<T>(Func<Task<T>> action, int maxAttempts = 3, TimeSpan? baseDelay = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -29,9 +27,9 @@ namespace Quartz.Store.MongoDb.Repositories
                         throw;
                     }
 
-                    // exponential backoff with jitter
+                    // exponential backoff with jitter using thread-safe Random.Shared
                     var delay = TimeSpan.FromMilliseconds(baseDelay.Value.TotalMilliseconds * Math.Pow(2, attempts - 1));
-                    var jitter = TimeSpan.FromMilliseconds(Jitterer.Next(0, (int)Math.Min(1000, delay.TotalMilliseconds)));
+                    var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, (int)Math.Min(1000, delay.TotalMilliseconds)));
                     await Task.Delay(delay + jitter).ConfigureAwait(false);
                 }
             }
