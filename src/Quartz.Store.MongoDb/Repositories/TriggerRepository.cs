@@ -123,7 +123,7 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task<long> GetCount(System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName).CountAsync(cancellationToken).ConfigureAwait(false);
+            return await Collection.Find(trigger => trigger.Id.InstanceName == InstanceName).CountDocumentsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<long> GetCount(JobKey jobKey, System.Threading.CancellationToken cancellationToken = default)
@@ -131,7 +131,7 @@ namespace Quartz.Store.MongoDb.Repositories
             return
                 await Collection.Find(
                     FilterBuilder.Where(trigger => trigger.Id.InstanceName == InstanceName && trigger.JobKey == jobKey))
-                    .CountAsync(cancellationToken).ConfigureAwait(false);
+                    .CountDocumentsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         [Obsolete]

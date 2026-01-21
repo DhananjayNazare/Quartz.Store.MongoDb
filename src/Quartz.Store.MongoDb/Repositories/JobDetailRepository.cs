@@ -77,7 +77,7 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task<long> GetCount(System.Threading.CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(detail => detail.Id.InstanceName == InstanceName).CountAsync(cancellationToken).ConfigureAwait(false);
+            return await Collection.Find(detail => detail.Id.InstanceName == InstanceName).CountDocumentsAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

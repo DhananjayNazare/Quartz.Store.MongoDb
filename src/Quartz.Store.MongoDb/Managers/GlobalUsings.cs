@@ -1,0 +1,9 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using Quartz.Impl.AdoJobStore;
+global using Quartz.Impl.Matchers;
+global using Quartz.Spi;
+global using Quartz.Store.MongoDb.Models;
+global using Quartz.Store.MongoDb.Repositories;

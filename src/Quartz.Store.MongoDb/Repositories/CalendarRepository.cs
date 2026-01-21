@@ -37,7 +37,7 @@ namespace Quartz.Store.MongoDb.Repositories
 
         public async Task<long> GetCount()
         {
-            return await Collection.Find(calendar => calendar.Id.InstanceName == InstanceName).CountAsync().ConfigureAwait(false);
+            return await Collection.Find(calendar => calendar.Id.InstanceName == InstanceName).CountDocumentsAsync().ConfigureAwait(false);
         }
 
         public async Task AddCalendar(Calendar calendar)

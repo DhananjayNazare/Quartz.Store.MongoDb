@@ -4,6 +4,7 @@ using Common.Logging;
 using MongoDB.Driver;
 using Quartz.Store.MongoDb.Models;
 using Quartz.Store.MongoDb.Models.Id;
+using Lock = Quartz.Store.MongoDb.Models.Lock;
 
 namespace Quartz.Store.MongoDb.Repositories
 {
