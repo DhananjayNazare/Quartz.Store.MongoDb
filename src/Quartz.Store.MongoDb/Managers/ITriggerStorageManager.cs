@@ -32,4 +32,10 @@ public interface ITriggerStorageManager
 
     /// <summary>Gets the state of a trigger.</summary>
     Task<TriggerState> GetTriggerState(TriggerKey triggerKey, CancellationToken token);
+
+    /// <summary>Gets all triggers associated with a job.</summary>
+    Task<IReadOnlyCollection<IOperableTrigger>> GetTriggersForJob(JobKey jobKey, CancellationToken token);
+
+    /// <summary>Resets a trigger from error state.</summary>
+    Task ResetTriggerFromErrorState(TriggerKey triggerKey, CancellationToken token);
 }

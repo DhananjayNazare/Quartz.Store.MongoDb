@@ -26,7 +26,4 @@ public interface IJobStorageManager
 
     /// <summary>Gets all job group names.</summary>
     Task<IReadOnlyCollection<string>> GetJobGroupNames(CancellationToken token);
-
-    /// <summary>Gets all triggers associated with a job.</summary>
-    Task<IReadOnlyCollection<IOperableTrigger>> GetTriggersForJob(JobKey jobKey, CancellationToken token);
 }

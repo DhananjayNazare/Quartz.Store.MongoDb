@@ -71,7 +71,7 @@ internal class SchedulerLifecycleManager : ISchedulerLifecycleManager
         // Repositories are already initialized via constructor injection
         // This method is called by Quartz to provide the signaler
         
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 
     public async Task SchedulerStarted(CancellationToken token)

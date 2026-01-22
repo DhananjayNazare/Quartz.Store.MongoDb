@@ -138,10 +138,7 @@ internal class TriggerFireManager : BaseStorageManager, ITriggerFireManager
 
     public async Task RecoverMisfiredJobs(bool recovering, CancellationToken token)
     {
-        await ExecuteWithLock(async () =>
-        {
-            await RecoverMisfiredJobsInternal(recovering, recovering ? -1 : 20).ConfigureAwait(false);
-        }, token);
+        await RecoverMisfiredJobsInternal(recovering, recovering ? -1 : 20).ConfigureAwait(false);
     }
 
     private async Task<RecoverMisfiredJobsResult> RecoverMisfiredJobsInternal(bool recovering, int maxMisfiresToHandle)

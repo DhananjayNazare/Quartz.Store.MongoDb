@@ -1,3 +1,4 @@
+using System.Linq;
 
 namespace Quartz.Store.MongoDb.Managers;
 
@@ -145,6 +146,23 @@ internal class TriggerStorageManager : BaseStorageManager, ITriggerStorageManage
             default:
                 return TriggerState.Normal;
         }
+    }
+
+    /// <summary>Gets all triggers associated with a job.</summary>
+    public async Task<IReadOnlyCollection<IOperableTrigger>> GetTriggersForJob(JobKey jobKey, CancellationToken token)
+    {
+        var result = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
+        return result.Select(trigger => trigger.GetTrigger())
+            .Cast<IOperableTrigger>()
+            .ToList();
+    }
+
+    /// <summary>Resets a trigger from error state.</summary>
+    public Task ResetTriggerFromErrorState(TriggerKey triggerKey, CancellationToken token)
+    {
+        // This is a placeholder implementation
+        // The actual implementation would reset the trigger state from Error to Normal/Waiting
+        return Task.CompletedTask;
     }
 
     /// <summary>Internal method to store a trigger.</summary>

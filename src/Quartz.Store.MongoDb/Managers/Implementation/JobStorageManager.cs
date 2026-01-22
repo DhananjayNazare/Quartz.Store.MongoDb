@@ -95,15 +95,6 @@ internal class JobStorageManager : BaseStorageManager, IJobStorageManager
         return names.ToList();
     }
 
-    /// <summary>Gets all triggers associated with a job.</summary>
-    public async Task<IReadOnlyCollection<IOperableTrigger>> GetTriggersForJob(JobKey jobKey, CancellationToken token)
-    {
-        var result = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
-        return result.Select(trigger => trigger.GetTrigger())
-            .Cast<IOperableTrigger>()
-            .ToList();
-    }
-
     /// <summary>Internal method to store a job detail.</summary>
     private async Task StoreJobInternal(IJobDetail newJob, bool replaceExisting)
     {
