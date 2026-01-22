@@ -2,6 +2,8 @@ global using System;
 global using System.Collections.Generic;
 global using System.Threading;
 global using System.Threading.Tasks;
+global using Common.Logging;
+global using MongoDB.Driver;
 global using Quartz.Impl.AdoJobStore;
 global using Quartz.Impl.Matchers;
 global using Quartz.Spi;

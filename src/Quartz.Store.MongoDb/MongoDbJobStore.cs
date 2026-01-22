@@ -158,8 +158,10 @@ namespace Quartz.Store.MongoDb
                 throw new SchedulerConfigException("Failure occurred during job recovery", ex);
             }
 
-            _misfireHandler = new MisfireHandler(this);
-            _misfireHandler.Start();
+            // TODO: Phase 4 - This will be replaced when MongoDbJobStore becomes a facade
+            // For now, create a temporary ITriggerFireManager wrapper
+            // _misfireHandler = new MisfireHandler(this);
+            // _misfireHandler.Start();
             _schedulerRunning = true;
         }
 

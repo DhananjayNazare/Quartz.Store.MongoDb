@@ -20,4 +20,7 @@ public interface ITriggerFireManager
 
     /// <summary>Recovers misfired triggers and returns recovery results.</summary>
     Task<RecoverMisfiredJobsResult> DoRecoverMisfires();
+
+    /// <summary>Recovers misfired jobs with optional recovery mode for scheduler startup.</summary>
+    Task RecoverMisfiredJobs(bool recovering, CancellationToken token);
 }
