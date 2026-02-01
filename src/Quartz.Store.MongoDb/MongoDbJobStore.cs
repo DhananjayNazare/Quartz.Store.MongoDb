@@ -195,26 +195,15 @@ namespace Quartz.Store.MongoDb
             await _schedulerRepository.DeleteScheduler(_schedulerId.Id).ConfigureAwait(false);
         }
 
-        public async Task StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger,
+        public Task StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await StoreJobInternal(newJob, false).ConfigureAwait(false);
-                    await StoreTriggerInternal(newTrigger, newJob, false, Models.TriggerState.Waiting, false, false,
-                        cancellationToken).ConfigureAwait(false);
-                }
-            }
-            catch (AggregateException ex)
-            {
-                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+                await StoreJobInternal(newJob, false).ConfigureAwait(false);
+                await StoreTriggerInternal(newTrigger, newJob, false, Models.TriggerState.Waiting, false, false,
+                    cancellationToken).ConfigureAwait(false);
+            }, unwrapAggregateExceptions: true);
         }
 
         public Task<bool> IsJobGroupPaused(string groupName, CancellationToken token = default(CancellationToken))
@@ -229,88 +218,39 @@ namespace Quartz.Store.MongoDb
             throw new NotImplementedException();
         }
 
-        public async Task StoreJob(IJobDetail newJob, bool replaceExisting,
+        public Task StoreJob(IJobDetail newJob, bool replaceExisting,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await StoreJobInternal(newJob, replaceExisting).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => StoreJobInternal(newJob, replaceExisting));
         }
 
-        public async Task StoreJobsAndTriggers(
+        public Task StoreJobsAndTriggers(
             IReadOnlyDictionary<IJobDetail, IReadOnlyCollection<ITrigger>> triggersAndJobs, bool replace,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                foreach (var job in triggersAndJobs.Keys)
                 {
-                    foreach (var job in triggersAndJobs.Keys)
+                    await StoreJobInternal(job, replace).ConfigureAwait(false);
+                    foreach (var trigger in triggersAndJobs[job])
                     {
-                        await StoreJobInternal(job, replace).ConfigureAwait(false);
-                        foreach (var trigger in triggersAndJobs[job])
-                            await StoreTriggerInternal((IOperableTrigger) trigger, job, replace,
-                                Models.TriggerState.Waiting, false, false, cancellationToken).ConfigureAwait(false);
+                        await StoreTriggerInternal((IOperableTrigger)trigger, job, replace,
+                            Models.TriggerState.Waiting, false, false, cancellationToken).ConfigureAwait(false);
                     }
                 }
-            }
-            catch (AggregateException ex)
-            {
-                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            }, unwrapAggregateExceptions: true);
         }
 
-        public async Task<bool> RemoveJob(JobKey jobKey, CancellationToken token = default(CancellationToken))
+        public Task<bool> RemoveJob(JobKey jobKey, CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await RemoveJobInternal(jobKey).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => RemoveJobInternal(jobKey));
         }
 
-        public async Task<bool> RemoveJobs(IReadOnlyCollection<JobKey> jobKeys,
+        public Task<bool> RemoveJobs(IReadOnlyCollection<JobKey> jobKeys,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    foreach (var jobKey in jobKeys)
-                    {
-                        token.ThrowIfCancellationRequested();
-                        var removed = await RemoveJobInternal(jobKey).ConfigureAwait(false);
-                        if (!removed)
-                        {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => RemoveJobsInternal(jobKeys, token));
         }
 
         public async Task<IJobDetail> RetrieveJob(JobKey jobKey, CancellationToken token = default(CancellationToken))
@@ -319,69 +259,35 @@ namespace Quartz.Store.MongoDb
             return result?.GetJobDetail();
         }
 
-        public async Task StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting,
+        public Task StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-            {
-                await StoreTriggerInternal(newTrigger, null, replaceExisting, Models.TriggerState.Waiting, false, false,
-                    cancellationToken);
-            }
+            return ExecuteInLock(() => StoreTriggerInternal(newTrigger, null, replaceExisting, Models.TriggerState.Waiting, false, false,
+                cancellationToken));
         }
 
-        public async Task<bool> RemoveTrigger(TriggerKey triggerKey,
+        public Task<bool> RemoveTrigger(TriggerKey triggerKey,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await RemoveTriggerInternal(triggerKey).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => RemoveTriggerInternal(triggerKey));
         }
 
-        public async Task<bool> RemoveTriggers(IReadOnlyCollection<TriggerKey> triggerKeys,
+        public Task<bool> RemoveTriggers(IReadOnlyCollection<TriggerKey> triggerKeys,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return triggerKeys.Aggregate(true,
-                        (current, triggerKey) => current && RemoveTriggerInternal(triggerKey).Result);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => RemoveTriggersInternal(triggerKeys));
         }
 
-        public async Task<bool> ReplaceTrigger(TriggerKey triggerKey, IOperableTrigger newTrigger,
+        public Task<bool> ReplaceTrigger(TriggerKey triggerKey, IOperableTrigger newTrigger,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await ReplaceTriggerInternal(triggerKey, newTrigger).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => ReplaceTriggerInternal(triggerKey, newTrigger));
         }
 
         public async Task<IOperableTrigger> RetrieveTrigger(TriggerKey triggerKey,
             CancellationToken token = default(CancellationToken))
         {
-                var result = await _triggerRepository.GetTrigger(triggerKey, CancellationToken.None).ConfigureAwait(false);
+            var result = await _triggerRepository.GetTrigger(triggerKey, CancellationToken.None).ConfigureAwait(false);
             return result?.GetTrigger() as IOperableTrigger;
         }
 
@@ -400,55 +306,28 @@ namespace Quartz.Store.MongoDb
             return await _triggerRepository.TriggerExists(triggerKey).ConfigureAwait(false);
         }
 
-        public async Task ClearAllSchedulingData(CancellationToken token = default(CancellationToken))
+        public Task ClearAllSchedulingData(CancellationToken token = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await _calendarRepository.DeleteAll().ConfigureAwait(false);
-                    await _firedTriggerRepository.DeleteAll().ConfigureAwait(false);
-                    await _jobDetailRepository.DeleteAll().ConfigureAwait(false);
-                    await _pausedTriggerGroupRepository.DeleteAll().ConfigureAwait(false);
-                    await _schedulerRepository.DeleteAll().ConfigureAwait(false);
-                    await _triggerRepository.DeleteAll().ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+                await _calendarRepository.DeleteAll().ConfigureAwait(false);
+                await _firedTriggerRepository.DeleteAll().ConfigureAwait(false);
+                await _jobDetailRepository.DeleteAll().ConfigureAwait(false);
+                await _pausedTriggerGroupRepository.DeleteAll().ConfigureAwait(false);
+                await _schedulerRepository.DeleteAll().ConfigureAwait(false);
+                await _triggerRepository.DeleteAll().ConfigureAwait(false);
+            });
         }
 
-        public async Task StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers,
+        public Task StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await StoreCalendarInternal(name, calendar, replaceExisting, updateTriggers, token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => StoreCalendarInternal(name, calendar, replaceExisting, updateTriggers, token));
         }
 
-        public async Task<bool> RemoveCalendar(string calName, CancellationToken token = default(CancellationToken))
+        public Task<bool> RemoveCalendar(string calName, CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await RemoveCalendarInternal(calName).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => RemoveCalendarInternal(calName));
         }
 
         public async Task<ICalendar> RetrieveCalendar(string calName,
@@ -542,209 +421,107 @@ namespace Quartz.Store.MongoDb
             }
         }
 
-        public async Task PauseTrigger(TriggerKey triggerKey, CancellationToken token = default(CancellationToken))
+        public Task PauseTrigger(TriggerKey triggerKey, CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await PauseTriggerInternal(triggerKey).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => PauseTriggerInternal(triggerKey));
         }
 
-        public async Task<IReadOnlyCollection<string>> PauseTriggers(GroupMatcher<TriggerKey> matcher,
+        public Task<IReadOnlyCollection<string>> PauseTriggers(GroupMatcher<TriggerKey> matcher,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await PauseTriggerGroupInternal(matcher, token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => PauseTriggerGroupInternal(matcher, token));
         }
 
-        public async Task PauseJob(JobKey jobKey, CancellationToken token = default(CancellationToken))
+        public Task PauseJob(JobKey jobKey, CancellationToken token = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                var triggers = await GetTriggersForJob(jobKey, token).ConfigureAwait(false);
+                foreach (var operableTrigger in triggers)
                 {
-                    var triggers = await GetTriggersForJob(jobKey, token).ConfigureAwait(false);
-                    foreach (var operableTrigger in triggers)
-                        await PauseTriggerInternal(operableTrigger.Key).ConfigureAwait(false);
+                    await PauseTriggerInternal(operableTrigger.Key).ConfigureAwait(false);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            });
         }
 
-        public async Task<IReadOnlyCollection<string>> PauseJobs(GroupMatcher<JobKey> matcher,
+        public Task<IReadOnlyCollection<string>> PauseJobs(GroupMatcher<JobKey> matcher,
             CancellationToken token = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                var jobKeys = await _jobDetailRepository.GetJobsKeys(matcher).ConfigureAwait(false);
+                foreach (var jobKey in jobKeys)
                 {
-                    var jobKeys = await _jobDetailRepository.GetJobsKeys(matcher).ConfigureAwait(false);
-                    foreach (var jobKey in jobKeys)
+                    var triggers = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
+                    foreach (var trigger in triggers)
                     {
-                        var triggers = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
-                        foreach (var trigger in triggers)
-                            await PauseTriggerInternal(trigger.GetTrigger().Key).ConfigureAwait(false);
+                        await PauseTriggerInternal(trigger.GetTrigger().Key).ConfigureAwait(false);
                     }
-
-                    return jobKeys.Select(key => key.Group).Distinct().ToList();
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+
+                return (IReadOnlyCollection<string>)[.. jobKeys.Select(key => key.Group).Distinct()];
+            });
         }
 
-        public async Task ResumeTrigger(TriggerKey triggerKey, CancellationToken token = default(CancellationToken))
+        public Task ResumeTrigger(TriggerKey triggerKey, CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await ResumeTriggerInternal(triggerKey, token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => ResumeTriggerInternal(triggerKey, token));
         }
 
-        public async Task<IReadOnlyCollection<string>> ResumeTriggers(GroupMatcher<TriggerKey> matcher,
+        public Task<IReadOnlyCollection<string>> ResumeTriggers(GroupMatcher<TriggerKey> matcher,
             CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await ResumeTriggersInternal(matcher, token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => ResumeTriggersInternal(matcher, token));
         }
 
         public async Task<IReadOnlyCollection<string>> GetPausedTriggerGroups(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return (IReadOnlyCollection<string>) new HashSet<string>(await _pausedTriggerGroupRepository
+            return (IReadOnlyCollection<string>)new HashSet<string>(await _pausedTriggerGroupRepository
                 .GetPausedTriggerGroups().ConfigureAwait(false));
         }
 
-        public async Task ResumeJob(JobKey jobKey, CancellationToken cancellationToken = default(CancellationToken))
+        public Task ResumeJob(JobKey jobKey, CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
+            return ExecuteInLock(async () =>
             {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                var triggers = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
+                await Task.WhenAll(triggers.Select(trigger =>
+                    ResumeTriggerInternal(trigger.GetTrigger().Key, cancellationToken))).ConfigureAwait(false);
+            }, unwrapAggregateExceptions: true);
+        }
+
+        public Task<IReadOnlyCollection<string>> ResumeJobs(GroupMatcher<JobKey> matcher,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return ExecuteInLock(async () =>
+            {
+                var jobKeys = await _jobDetailRepository.GetJobsKeys(matcher).ConfigureAwait(false);
+                foreach (var jobKey in jobKeys)
                 {
                     var triggers = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
                     await Task.WhenAll(triggers.Select(trigger =>
                         ResumeTriggerInternal(trigger.GetTrigger().Key, cancellationToken))).ConfigureAwait(false);
                 }
-            }
-            catch (AggregateException ex)
-            {
-                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+
+                return (IReadOnlyCollection<string>)new HashSet<string>(jobKeys.Select(key => key.Group));
+            }, unwrapAggregateExceptions: true);
         }
 
-        public async Task<IReadOnlyCollection<string>> ResumeJobs(GroupMatcher<JobKey> matcher,
-            CancellationToken cancellationToken = default(CancellationToken))
+        public Task PauseAll(CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    var jobKeys = await _jobDetailRepository.GetJobsKeys(matcher).ConfigureAwait(false);
-                    foreach (var jobKey in jobKeys)
-                    {
-                        var triggers = await _triggerRepository.GetTriggers(jobKey).ConfigureAwait(false);
-                        await Task.WhenAll(triggers.Select(trigger =>
-                            ResumeTriggerInternal(trigger.GetTrigger().Key, cancellationToken))).ConfigureAwait(false);
-                    }
-
-                    return (IReadOnlyCollection<string>) new HashSet<string>(jobKeys.Select(key => key.Group));
-                }
-            }
-            catch (AggregateException ex)
-            {
-                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => PauseAllInternal());
         }
 
-        public async Task PauseAll(CancellationToken token = default(CancellationToken))
+        public Task ResumeAll(CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await PauseAllInternal().ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => ResumeAllInternal());
         }
 
-        public async Task ResumeAll(CancellationToken token = default(CancellationToken))
-        {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    await ResumeAllInternal().ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
-        }
-
-        public async Task<IReadOnlyCollection<IOperableTrigger>> AcquireNextTriggers(DateTimeOffset noLaterThan,
+        public Task<IReadOnlyCollection<IOperableTrigger>> AcquireNextTriggers(DateTimeOffset noLaterThan,
             int maxCount, TimeSpan timeWindow, CancellationToken token = default(CancellationToken))
         {
-            try
-            {
-                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
-                {
-                    return await AcquireNextTriggersInternal(noLaterThan, maxCount, timeWindow, token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new JobPersistenceException(ex.Message, ex);
-            }
+            return ExecuteInLock(() => AcquireNextTriggersInternal(noLaterThan, maxCount, timeWindow, token));
         }
 
         public async Task ReleaseAcquiredTrigger(IOperableTrigger trigger,
@@ -973,6 +750,34 @@ namespace Quartz.Store.MongoDb
             }
 
             return removedTrigger;
+        }
+
+        private async Task<bool> RemoveJobsInternal(IReadOnlyCollection<JobKey> jobKeys, CancellationToken token)
+        {
+            foreach (var jobKey in jobKeys)
+            {
+                token.ThrowIfCancellationRequested();
+                var removed = await RemoveJobInternal(jobKey).ConfigureAwait(false);
+                if (!removed)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private async Task<bool> RemoveTriggersInternal(IReadOnlyCollection<TriggerKey> triggerKeys)
+        {
+            foreach (var triggerKey in triggerKeys)
+            {
+                if (!await RemoveTriggerInternal(triggerKey).ConfigureAwait(false))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private async Task<bool> RemoveCalendarInternal(string calendarName)
@@ -1587,6 +1392,44 @@ namespace Quartz.Store.MongoDb
         public Task ResetTriggerFromErrorState(TriggerKey triggerKey, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
+        }
+
+        private async Task ExecuteInLock(Func<Task> operation, bool unwrapAggregateExceptions = false)
+        {
+            try
+            {
+                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                {
+                    await operation().ConfigureAwait(false);
+                }
+            }
+            catch (AggregateException ex) when (unwrapAggregateExceptions && ex.InnerExceptions.Count > 0)
+            {
+                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
+            }
+            catch (Exception ex)
+            {
+                throw new JobPersistenceException(ex.Message, ex);
+            }
+        }
+
+        private async Task<T> ExecuteInLock<T>(Func<Task<T>> operation, bool unwrapAggregateExceptions = false)
+        {
+            try
+            {
+                using (await _lockManager.AcquireLock(LockType.TriggerAccess, InstanceId).ConfigureAwait(false))
+                {
+                    return await operation().ConfigureAwait(false);
+                }
+            }
+            catch (AggregateException ex) when (unwrapAggregateExceptions && ex.InnerExceptions.Count > 0)
+            {
+                throw new JobPersistenceException(ex.InnerExceptions[0].Message, ex.InnerExceptions[0]);
+            }
+            catch (Exception ex)
+            {
+                throw new JobPersistenceException(ex.Message, ex);
+            }
         }
     }
 }
